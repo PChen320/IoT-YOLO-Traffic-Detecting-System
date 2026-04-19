@@ -1,0 +1,12 @@
+.venv/
+.tmp/
+.ultralytics/
+Ultralytics/
+data/
+outputs/
+logs/
+evaluation/
+__pycache__/
+*.env
+.env
+*.pt
