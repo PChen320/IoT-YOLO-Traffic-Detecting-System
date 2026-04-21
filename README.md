@@ -11,6 +11,7 @@ The project is intentionally kept small. The main files are:
 ```text
 yolo_test.py              Run YOLO, generate counts, detect simple safety alerts
 thingspeak_publisher.py   Upload counts to ThingSpeak every 15 seconds
+control_backend.py        Publish RED/GREEN/WARNING control messages for Wokwi
 evaluate_detection.py     Optional count-level detection evaluation
 monitor_resources.py      Optional CPU/RAM usage sampling
 ```
@@ -128,7 +129,66 @@ outputs/alerts.jsonl
 
 ThingSpeak Field 6 uploads that alert count. The default demo video has no detected pedestrians, so alert_count is currently 0.
 
-## 5. Optional Evaluation
+## 5. Backend Control Logic for Wokwi
+
+Generate control messages without publishing:
+
+```powershell
+python control_backend.py --limit 3
+```
+
+Publish to MQTT for a Wokwi ESP32/Pico W node:
+
+```powershell
+python control_backend.py --publish --loop
+```
+
+Default MQTT settings:
+
+```text
+Broker: broker.hivemq.com
+Port: 1883
+Topic: cityflow/team7/a01/control/test
+```
+
+By default, the backend publishes a plain text command:
+
+```text
+GREEN
+RED
+WARNING
+```
+
+This matches the current Wokwi ESP32 code. If you want full JSON instead, run:
+
+```powershell
+python control_backend.py --publish --json
+```
+
+JSON mode example:
+
+```json
+{
+  "intersection_id": "A01",
+  "state": "GREEN",
+  "reason": "vehicle_demand",
+  "vehicle_count": 18,
+  "pedestrian_count": 0,
+  "bicycle_count": 0,
+  "alert_count": 0
+}
+```
+
+Control rules:
+
+```text
+alert_count > 0                    -> WARNING
+pedestrian_count or bicycle_count  -> WARNING
+vehicle_count >= 8                 -> GREEN
+otherwise                          -> RED
+```
+
+## 6. Optional Evaluation
 
 Create manual labeling template:
 
